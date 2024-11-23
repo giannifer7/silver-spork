@@ -12,7 +12,7 @@ class SolcSelectVersionsError(RuntimeError):
     pass
 
 
-def subrun(cmd: list[str]) -> CompletedProcess:
+def subrun(cmd: list[str]) -> CompletedProcess[str]:
     return run(
         cmd,
         capture_output=True,
@@ -31,7 +31,7 @@ def _available_solidity_versions() -> list[VerTuple]:
             "solc-select versions failed: {run_result.returncode}"
         )
 
-    def ver_tuple(line):
+    def ver_tuple(line: str) -> VerTuple:
         major, minor, patch = line.split(".", maxsplit=2)
         return (
             int(major),
@@ -80,7 +80,7 @@ class Config:
         self.slither_results_1 = self.slither_results_base_dir / "ret_1"
         self.slither_results_other = self.slither_results_base_dir / "ret_other"
 
-        def mkd(f):
+        def mkd(f: Path) -> None:
             f.mkdir(parents=True, exist_ok=True)
 
         mkd(self.contracts_meta)

@@ -52,7 +52,7 @@ def slither_one_sol(
         slither_file.write(slither_block)
 
 
-def check_contracts(config: Config, contracts: Iterator[Path], limit=-1) -> None:
+def check_contracts(config: Config, contracts: Iterator[Path], limit: int=-1) -> None:
     prev_ver: Version = "0.4.26"
     solc_use(prev_ver)
     for index, sol_path in enumerate(contracts):

@@ -31,11 +31,11 @@ class RichVersion:
     version: Version
     sup_version: Version | None
 
-    def version_to_use(self, config: Config):
+    def version_to_use(self, config: Config) -> Version:
         if self.ver_type != VersionType.RANGE:
             return self.version
         if self.sup_version is None:
-            return config.default_solidity_version
+            return ver_from_tuple(config.default_solidity_version)
         sup_tuple = ver_tuple(self.sup_version)
         versions = config.available_solidity_versions
         return ver_from_tuple(versions[bisect.bisect_left(versions, sup_tuple) - 1])
