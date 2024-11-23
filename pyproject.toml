@@ -1,0 +1,59 @@
+[project]
+name = "slith"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "slither-analyzer>=0.10.4",
+    "solc-select>=1.0.4",
+    "solidity-parser>=0.1.1",
+]
+
+[project.scripts]
+slith = "slith.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.1.1",
+    "pytest-cov>=4.1.0",
+]
+dev = [
+    "mypy>=1.13.0",
+    "pylint>=3.3.1",
+    "ruff>=0.7.3",
+    "pytest>=8.1.1",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.mypy]
+mypy_path = "typings"
+implicit_optional = true
+allow_redefinition = true
+
+[tool.pylint.messages_control]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+    "R0902",  # too-many-instance-attributes
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "R0917",  # too-many-positional-arguments
+    "W0718",  # broad-exception-caught
+    "W1514",  # unspecified-encoding
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"
+pythonpath = [
+    ".",
+    "src",
+    "tests",
+]
