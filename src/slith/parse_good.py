@@ -5,7 +5,8 @@ import io
 import traceback
 from types import TracebackType
 from solidity_parser import parser  # type: ignore
-from slith.config import Config, FileName
+from slith.util import FileName
+from slith.config import Config
 
 
 class ErrRedirect:

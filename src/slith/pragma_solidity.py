@@ -2,19 +2,25 @@ import re
 import bisect
 from enum import IntEnum, auto
 from dataclasses import dataclass
+from typing import TypeAlias
 
-from slith.config import Config, subrun, FileName, VerTuple
+from slith.util import subrun, FileName, Version, VerTuple, ver_tuple, ver_from_tuple
+from slith.solc_select import SolcSelector
 
 
 PRAGMA_SOLIDITY_RE = re.compile(r"pragma solidity (?P<caret>\^|>?)(?P<ver>[^;]+);")
 VERSION_RANGE_RE = re.compile(r"=(?P<min>\S+)\s+<(?P<sup>.+)")
 
 
-type Version = str
-type CaretFile = tuple[bool, FileName]
-type CaretFiles = list[CaretFile]
-type FilesOfVersion = tuple[VerTuple, CaretFiles]
-type FilesOfVersions = list[FilesOfVersion]
+CaretFile: TypeAlias = tuple[bool, FileName]
+CaretFiles: TypeAlias = list[CaretFile]
+FilesOfVersion: TypeAlias = tuple[VerTuple, CaretFiles]
+FilesOfVersions: TypeAlias = list[FilesOfVersion]
+
+# type CaretFile = tuple[bool, FileName]
+# type CaretFiles = list[CaretFile]
+# type FilesOfVersion = tuple[VerTuple, CaretFiles]
+# type FilesOfVersions = list[FilesOfVersion]
 
 
 class VersionType(IntEnum):
@@ -31,13 +37,13 @@ class RichVersion:
     version: Version
     sup_version: Version | None
 
-    def version_to_use(self, config: Config) -> Version:
+    def version_to_use(self, sele: SolcSelector) -> Version:
         if self.ver_type != VersionType.RANGE:
             return self.version
         if self.sup_version is None:
-            return ver_from_tuple(config.default_solidity_version)
+            return ver_from_tuple(sele.default_solidity_version)
         sup_tuple = ver_tuple(self.sup_version)
-        versions = config.available_solidity_versions
+        versions = sele.versions
         return ver_from_tuple(versions[bisect.bisect_left(versions, sup_tuple) - 1])
 
 
@@ -67,8 +73,8 @@ def match_pragma_solidity(
                 return None
 
 
-def version_from_pragma(config: Config, sol_text: str) -> RichVersion:
-    default_version = config.default_solidity_version
+def version_from_pragma(sele: SolcSelector, sol_text: str) -> RichVersion:
+    default_version = sele.default_solidity_version
     pragma = match_pragma_solidity(sol_text)
     if pragma is None:
         ver_type, ver_tup, sup = VersionType.UNDEFINED, default_version, None
@@ -80,7 +86,7 @@ def version_from_pragma(config: Config, sol_text: str) -> RichVersion:
             return RichVersion(
                 ver_type,
                 ver,
-                ver_from_tuple(caret_version(config, ver_tup)),
+                ver_from_tuple(sele.caret_version(ver_tup)),
                 None,
             )
         case VersionType.RANGE:
@@ -104,32 +110,3 @@ def version_from_pragma(config: Config, sol_text: str) -> RichVersion:
                 ver,
                 None,
             )
-
-
-def ver_tuple(ver: Version) -> VerTuple:
-    major, minor, patch = ver.split(".", maxsplit=2)
-    return (
-        int(major),
-        int(minor),
-        int(patch),
-    )
-
-
-def ver_from_tuple(ver: VerTuple) -> Version:
-    major, minor, patch = ver
-    return f"{major}.{minor}.{patch}"
-
-
-def next_minor_version(ver: VerTuple) -> VerTuple:
-    major, minor, _ = ver
-    return major, minor + 1, 0
-
-
-def caret_version(config: Config, in_ver: VerTuple) -> VerTuple:
-    next_minor = next_minor_version(in_ver)
-    versions = config.available_solidity_versions
-    return versions[bisect.bisect_left(versions, next_minor) - 1]
-
-
-def solc_use(ver: Version) -> None:
-    subrun(["solc-select", "use", ver])

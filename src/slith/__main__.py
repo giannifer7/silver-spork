@@ -1,14 +1,52 @@
 from pathlib import Path
 from typing import Iterator
 
-from slith.config import Config, subrun
+from slith.util import subrun, Version
+from slith.config import Config
+from slith.solc_select import SolcSelector
 from slith.pragma_solidity import (
-    Version,
     RichVersion,
     version_from_pragma,
-    solc_use,
 )
 from slith.parse_good import contracts_that_parse
+
+
+def front_matter(
+    index: int,
+    sol_path: Path,
+    found_version: Version | None,
+    version: Version,
+    ret_code: int,
+) -> str:
+    return (
+        "slither:\n"
+        f"  index: {index}\n"
+        f'  sol: "{sol_path.name}"\n'
+        f'  found_version: {found_version}\n'
+        f'  checked_version: {version}\n'
+        f"  ret_code: {ret_code}\n"
+        f"{'=' * 3}\n\n"
+    )
+
+
+def dirs_from_ret_code(config: Config, ret_code: int) -> tuple[Path, Path]:
+    match ret_code:
+        case 255:
+            return config.results_255, config.slither_results_255
+        case 1:
+            return config.results_1, config.slither_results_1
+        case _:
+            return config.results_other, config.slither_results_other
+
+
+def out_text(slither_block: str, sol_text: str) -> str:
+    return f"/*\n{slither_block}*/\n\n{sol_text}\n"
+
+
+def write_out_file(
+    out_dir: Path, sol_path: Path, slither_block: str, sol_text: str
+) -> None:
+    (out_dir / sol_path.name).write_text(out_text(slither_block, sol_text))
 
 
 def slither_one_sol(
@@ -21,49 +59,26 @@ def slither_one_sol(
 ) -> None:
     run_result = subrun(["slither", str(sol_path)])
     ret_code = run_result.returncode
-    match ret_code:
-        case 255:
-            out_dir = config.results_255
-            slither_dir = config.slither_results_255
-        case 1:
-            out_dir = config.results_1
-            slither_dir = config.slither_results_1
-        case _:
-            out_dir = config.results_other
-            slither_dir = config.slither_results_other
     print(f"{index:05d} {sol_path.name}: {ret_code}")
     slither_block = (
-        "slither:\n"
-        f"  index: {index:05d}\n"
-        f'  sol: "{sol_path.name}"\n'
-        f'  found_version: {found_version}\n'
-        f'  checked_version: {version}\n'
-        f"  ret_code: {ret_code}\n"
-        f"{'=' * 3}\n\n"
+        f"{front_matter(index, sol_path, found_version, version, ret_code)}"
         f"{run_result.stderr}"
     )
-    with open(out_dir / sol_path.name, "w") as out_file:
-        out_file.write("/*\n")
-        out_file.write(slither_block)
-        out_file.write("*/\n\n")
-        out_file.write(sol_text)
-        out_file.write("\n")
-    with open(slither_dir / sol_path.with_suffix(".txt").name, "w") as slither_file:
-        slither_file.write(slither_block)
+    out_dir, slither_dir = dirs_from_ret_code(config, ret_code)
+    (out_dir / sol_path.name).write_text(out_text(slither_block, sol_text))
+    (slither_dir / sol_path.with_suffix(".txt").name).write_text(slither_block)
 
 
-def check_contracts(config: Config, contracts: Iterator[Path], limit: int=-1) -> None:
-    prev_ver: Version = "0.4.26"
-    solc_use(prev_ver)
+def check_contracts(
+    config: Config, solc_sel: SolcSelector, contracts: Iterator[Path], limit: int = -1
+) -> None:
     for index, sol_path in enumerate(contracts):
         if 0 <= limit <= index:
             break
         sol_text = sol_path.read_text()
-        rich_ver: RichVersion = version_from_pragma(config, sol_text)
-        version_to_use = rich_ver.version_to_use(config)
-        if version_to_use != prev_ver:
-            solc_use(version_to_use)
-            prev_ver = version_to_use
+        rich_ver: RichVersion = version_from_pragma(solc_sel, sol_text)
+        version_to_use = rich_ver.version_to_use(solc_sel)
+        solc_sel.solc_use(version_to_use)
         slither_one_sol(
             config, index, sol_path, sol_text, rich_ver.found_version, version_to_use
         )
@@ -71,8 +86,9 @@ def check_contracts(config: Config, contracts: Iterator[Path], limit: int=-1) ->
 
 
 def run(config: Config) -> None:
-    # check_contracts(config, contracts_that_parse(config), limit=-1)
-    check_contracts(config, config.contracts_glob(), limit=-1)
+    solc_sel = SolcSelector()
+    check_contracts(config, solc_sel, contracts_that_parse(config), limit=-1)
+    # check_contracts(config, config.contracts_glob(), limit=-1)
 
 
 def main() -> None:

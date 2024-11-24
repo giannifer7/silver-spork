@@ -35,6 +35,12 @@ files = "src/slith"
 mypy_path = "typings"
 implicit_optional = true
 allow_redefinition = true
+strict = true
+
+[tool.pylint.main]
+ignore = []
+recursive = true
+source-roots = ["src"]
 
 [tool.pylint.messages_control]
 disable = [

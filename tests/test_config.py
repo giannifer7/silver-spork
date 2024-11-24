@@ -2,12 +2,8 @@ import pytest
 from pathlib import Path
 from subprocess import CompletedProcess
 
-from slith.config import (
-    Config,
-    subrun,
-    _available_solidity_versions,
-    SolcSelectVersionsError,
-)
+from slith.util import subrun
+from slith.config import Config
 
 
 @pytest.fixture
@@ -20,7 +16,7 @@ def mock_solc_select(monkeypatch):
             stderr="",
         )
 
-    monkeypatch.setattr("slith.config.subrun", mock_run)
+    monkeypatch.setattr("slith.util.subrun", mock_run)
     return mock_run
 
 
@@ -34,7 +30,7 @@ def mock_failed_solc_select(monkeypatch):
             stderr="Error running solc-select",
         )
 
-    monkeypatch.setattr("slith.config.subrun", mock_run)
+    monkeypatch.setattr("slith.util.subrun", mock_run)
     return mock_run
 
 
@@ -60,16 +56,6 @@ def test_subrun():
     assert result.stdout.strip() == "test"
 
 
-def test_available_solidity_versions(mock_solc_select):
-    """Test parsing of available Solidity versions"""
-    versions = _available_solidity_versions()
-    assert len(versions) == 5
-    assert versions[0] == (0, 4, 26)
-    assert versions[-1] == (0, 8, 19)
-    assert all(isinstance(v, tuple) and len(v) == 3 for v in versions)
-    assert versions == sorted(versions)  # Check that versions are sorted
-
-
 def test_available_solidity_versions_with_parentheses(monkeypatch):
     """Test parsing versions with parentheses in patch number"""
 
@@ -81,7 +67,7 @@ def test_available_solidity_versions_with_parentheses(monkeypatch):
             stderr="",
         )
 
-    monkeypatch.setattr("slith.config.subrun", mock_run)
+    monkeypatch.setattr("slith.util.subrun", mock_run)
 
     versions = _available_solidity_versions()
     assert len(versions) == 5

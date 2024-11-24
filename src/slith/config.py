@@ -1,47 +1,9 @@
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Iterator
-from subprocess import run, CompletedProcess
-from functools import cache
 
-type FileName = str
-type VerTuple = tuple[int, int, int]
-
-
-class SolcSelectVersionsError(RuntimeError):
-    pass
-
-
-def subrun(cmd: list[str]) -> CompletedProcess[str]:
-    return run(
-        cmd,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-
-
-@cache
-def _available_solidity_versions() -> list[VerTuple]:
-    run_result = subrun(["solc-select", "versions"])
-    if run_result.returncode:
-        raise SolcSelectVersionsError(
-            "solc-select versions failed: {run_result.returncode}"
-        )
-
-    def ver_tuple(line: str) -> VerTuple:
-        major, minor, patch = line.split(".", maxsplit=2)
-        return (
-            int(major),
-            int(minor),
-            int(patch if not "(" in patch else patch.split()[0]),
-        )
-
-    versions_list = [ver_tuple(line) for line in run_result.stdout.splitlines()]
-    versions_list.sort()
-    return versions_list
+# from slith.solc_select import available_solidity_versions as avail_solidity_versions
+# from slith.util import VerTuple
 
 
 @dataclass
@@ -53,8 +15,8 @@ class Config:
     contracts_ok: Path
     contracts_fail: Path
     contracts_errors: Path
-    available_solidity_versions: list[VerTuple]
-    default_solidity_version: VerTuple
+    # available_solidity_versions: list[VerTuple]
+    # default_solidity_version: VerTuple
     results_255: Path
     results_1: Path
     results_other: Path
@@ -70,8 +32,10 @@ class Config:
         self.contracts_ok = self.contracts_meta / "contracts_parse_ok.txt"
         self.contracts_fail = self.contracts_meta / "contracts_parse_fail.txt"
         self.contracts_errors = self.contracts_meta / "errors"
-        self.available_solidity_versions = _available_solidity_versions()
-        self.default_solidity_version = _available_solidity_versions()[-1]
+        # self.available_solidity_versions = avail_solidity_versions()
+        # self.available_solidity_versions = avail_solidity_versions()
+        # self.default_solidity_version = avail_solidity_versions()[-1]
+        # self.default_solidity_version = self.available_solidity_versions[-1]
         self.results_255 = self.results_base_dir / "ret_255"
         self.results_1 = self.results_base_dir / "ret_1"
         self.results_other = self.results_base_dir / "ret_other"
