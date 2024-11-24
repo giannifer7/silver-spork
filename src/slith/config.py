@@ -2,9 +2,6 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import Iterator
 
-# from slith.solc_select import available_solidity_versions as avail_solidity_versions
-# from slith.util import VerTuple
-
 
 @dataclass
 class Config:
@@ -15,8 +12,6 @@ class Config:
     contracts_ok: Path
     contracts_fail: Path
     contracts_errors: Path
-    # available_solidity_versions: list[VerTuple]
-    # default_solidity_version: VerTuple
     results_255: Path
     results_1: Path
     results_other: Path
@@ -32,10 +27,6 @@ class Config:
         self.contracts_ok = self.contracts_meta / "contracts_parse_ok.txt"
         self.contracts_fail = self.contracts_meta / "contracts_parse_fail.txt"
         self.contracts_errors = self.contracts_meta / "errors"
-        # self.available_solidity_versions = avail_solidity_versions()
-        # self.available_solidity_versions = avail_solidity_versions()
-        # self.default_solidity_version = avail_solidity_versions()[-1]
-        # self.default_solidity_version = self.available_solidity_versions[-1]
         self.results_255 = self.results_base_dir / "ret_255"
         self.results_1 = self.results_base_dir / "ret_1"
         self.results_other = self.results_base_dir / "ret_other"

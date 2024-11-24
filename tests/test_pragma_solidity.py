@@ -20,7 +20,7 @@ def mock_solc_selector(monkeypatch):
 
     class MockSolcSelector:
         def __init__(self):
-            self.available_solidity_versions = [
+            self.versions = [  # Changed from available_solidity_versions
                 (0, 4, 26),
                 (0, 5, 17),
                 (0, 6, 12),
@@ -31,7 +31,9 @@ def mock_solc_selector(monkeypatch):
 
         def caret_version(self, ver_tup):
             return max(
-                v for v in self.available_solidity_versions if v[:2] == ver_tup[:2]
+                v
+                for v in self.versions
+                if v[:2] == ver_tup[:2]  # Changed this too
             )
 
     return MockSolcSelector()

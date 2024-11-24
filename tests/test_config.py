@@ -56,24 +56,6 @@ def test_subrun():
     assert result.stdout.strip() == "test"
 
 
-def test_available_solidity_versions_with_parentheses(monkeypatch):
-    """Test parsing versions with parentheses in patch number"""
-
-    def mock_run(*args, **kwargs):
-        return CompletedProcess(
-            args=["solc-select", "versions"],
-            returncode=0,
-            stdout="0.4.26\n0.5.17\n0.6.12 (some text)\n0.7.6\n0.8.19",
-            stderr="",
-        )
-
-    monkeypatch.setattr("slith.util.subrun", mock_run)
-
-    versions = _available_solidity_versions()
-    assert len(versions) == 5
-    assert versions[2] == (0, 6, 12)  # Verify parentheses are handled correctly
-
-
 def test_config_initialization(config):
     """Test Config initialization and directory creation"""
     # Check that all required directories are created
@@ -98,12 +80,6 @@ def test_config_initialization(config):
         finally:
             if test_file.exists():
                 test_file.unlink()
-
-
-def test_config_default_solidity_version(config):
-    """Test that default Solidity version is set to latest available version"""
-    assert config.default_solidity_version == (0, 8, 19)
-    assert config.default_solidity_version == config.available_solidity_versions[-1]
 
 
 def test_config_paths_structure(config):

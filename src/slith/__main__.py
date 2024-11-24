@@ -88,7 +88,6 @@ def check_contracts(
 def run(config: Config) -> None:
     solc_sel = SolcSelector()
     check_contracts(config, solc_sel, contracts_that_parse(config), limit=-1)
-    # check_contracts(config, config.contracts_glob(), limit=-1)
 
 
 def main() -> None:

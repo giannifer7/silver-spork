@@ -4,7 +4,7 @@ from enum import IntEnum, auto
 from dataclasses import dataclass
 from typing import TypeAlias
 
-from slith.util import subrun, FileName, Version, VerTuple, ver_tuple, ver_from_tuple
+from slith.util import FileName, Version, VerTuple, ver_tuple, ver_from_tuple
 from slith.solc_select import SolcSelector
 
 

@@ -15,7 +15,7 @@ def _ver_tuple(line: str) -> VerTuple:
     )
 
 
-def _solc_select_version() -> VerTuple | None:
+def _solc_select_version() -> list[str] | None:
     run_result = subrun(["solc-select", "versions"])
     if run_result.stdout.startswith("No solc version"):
         return None
@@ -68,8 +68,8 @@ def caret_installable_versions() -> list[VerTuple]:
 
 
 def init_solc_select() -> None:
-    if result := available_solidity_versions():
-        return result
+    if available_solidity_versions():
+        return
     caret_versions = caret_installable_versions()
     for tupver in caret_versions:
         ver = ver_from_tuple(tupver)
@@ -88,7 +88,7 @@ class SolcSelector:
     versions_dict: set[VerTuple]
     installables: list[VerTuple]
     installables_dict: set[VerTuple]
-    all_versions: list[VerTuple, bool]
+    all_versions: list[tuple[VerTuple, bool]]
     current: VerTuple | None
     default_solidity_version: VerTuple
 
@@ -128,7 +128,7 @@ class SolcSelector:
         self.update()
 
     def solc_use(self, ver: Version) -> None:
-        if ver == ver_from_tuple(self.current):
+        if self.current is not None and ver == ver_from_tuple(self.current):
             return
         vertup = ver_tuple(ver)
         if vertup not in self.versions_dict:
