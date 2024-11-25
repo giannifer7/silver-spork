@@ -19,6 +19,10 @@ class Config:
     slither_results_255: Path
     slither_results_1: Path
     slither_results_other: Path
+    mythril_results_base_dir: Path
+    mythril_results_255: Path
+    mythril_results_1: Path
+    mythril_results_other: Path
 
     def __init__(self) -> None:
         self.patched_contracts_old = self.data_dir / "patched_contracts_old"
@@ -30,10 +34,16 @@ class Config:
         self.results_255 = self.results_base_dir / "ret_255"
         self.results_1 = self.results_base_dir / "ret_1"
         self.results_other = self.results_base_dir / "ret_other"
+
         self.slither_results_base_dir = self.results_base_dir / "slither_results"
         self.slither_results_255 = self.slither_results_base_dir / "ret_255"
         self.slither_results_1 = self.slither_results_base_dir / "ret_1"
         self.slither_results_other = self.slither_results_base_dir / "ret_other"
+
+        self.mythril_results_base_dir = self.results_base_dir / "mythril_results"
+        self.mythril_results_255 = self.mythril_results_base_dir / "ret_255"
+        self.mythril_results_1 = self.mythril_results_base_dir / "ret_1"
+        self.mythril_results_other = self.mythril_results_base_dir / "ret_other"
 
         def mkd(f: Path) -> None:
             f.mkdir(parents=True, exist_ok=True)
@@ -47,6 +57,9 @@ class Config:
         mkd(self.slither_results_255)
         mkd(self.slither_results_1)
         mkd(self.slither_results_other)
+        mkd(self.mythril_results_255)
+        mkd(self.mythril_results_1)
+        mkd(self.mythril_results_other)
 
     def contracts_glob(self) -> Iterator[Path]:
         return self.patched_contracts_old.glob("*.sol")

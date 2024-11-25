@@ -5,6 +5,7 @@ description = "Driver for static analyzers for Solidity"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "mythril",
     "slither-analyzer>=0.10.4",
     "solc-select>=1.0.4",
     "solidity-parser>=0.1.1",
@@ -64,3 +65,6 @@ pythonpath = [
     "src",
     "tests",
 ]
+
+[tool.uv.sources]
+mythril = { git = "https://github.com/Consensys/mythril.git" }
